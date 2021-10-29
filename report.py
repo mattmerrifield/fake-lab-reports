@@ -12,9 +12,12 @@ import pdfkit
 
 from jinja2 import Template
 
-# ugh. Sorry. I need a better OS on this box, but this is a quick dirty hack
-path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-PDF_CONFIG = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf,)
+if platform.system() == "Windows":
+    # ugh. Sorry. I need a better OS on this box, but this is a quick dirty hack
+    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    PDF_CONFIG = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+else:
+    PDF_CONFIG = pdfkit.configuration()
 
 TEMPLATES = Path(__file__).parent
 
