@@ -1,0 +1,104 @@
+* {
+  font-family: "Gill Sans", sans-serif;
+  font-size: 10pt;
+}
+
+h1 {
+  color: grey;
+}
+
+table {
+  width: 100%
+}
+
+.report {
+  border: 2px solid black;
+  align-content: center;
+  padding: 0.1in;
+  width: 8in;
+}
+
+.H {
+  color: red;
+}
+.L {
+  color: blue;
+}
+
+.subtitle {
+  text-align: center;
+  font-weight: bold;
+  font-size: 12pt;
+  margin-bottom: 0.1in;
+}
+
+.sender {
+  padding-bottom: 2px;
+  margin-bottom: 0;
+
+}
+
+.letterhead {
+  border-bottom: 1px solid green;
+  margin-bottom: .05in;
+  padding-bottom: .05in;
+}
+
+.letterhead > p {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.send-date {
+  justify-self: right;
+}
+
+.footer-break {
+  border-top: 2px solid green;
+  border-bottom: 2px solid green;
+  height: 10px;
+}
+
+.section-header {
+  box-shadow: inset 0 0 0 1000px #d2e6c3;
+  border: 1px solid black;
+  padding: 2px;
+}
+
+th {
+  border: 1px solid black;
+  font-weight: normal;
+  text-align: left;
+}
+
+.report-meta > tbody > tr> th {
+  padding-left: 20px;
+  width: 2in;
+}
+
+td {
+  padding-left: 20px;
+}
+
+.test-results > table {
+  margin: 0;
+}
+
+.test-results >tbody > tr > td {
+  min-width: 1.5in
+}
+.units {
+  padding-left: 0;
+}
+
+.result {
+  text-align: center;
+}
+
+.range {
+  text-align: center;
+}
+
+.footer {
+  width: 100%
+}

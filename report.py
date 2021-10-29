@@ -1,241 +1,25 @@
 import enum
+import platform
 import random
 import datetime as dt
 import statistics
 import sys
 from dataclasses import dataclass, asdict
+from pathlib import Path
 from typing import List, Optional
 
-from xhtml2pdf import pisa
+import pdfkit
 
 from jinja2 import Template
 
-# language=jinja2
-template = Template(source="""
-<html>
-<style>
-p {
-  font-size: 10;
-}
+# ugh. Sorry. I need a better OS on this box, but this is a quick dirty hack
+path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+PDF_CONFIG = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf,)
 
-tbody {
-  font-size: 10
-}
+TEMPLATES = Path(__file__).parent
 
-* {
-  font-family: "Gill Sans", sans-serif;
-}
-
-h1 {
-  color: grey;
-}
-
-.report {
-  width: 7in;
-  height: 10.1in;
-  border: 2px solid black;
-  margin: 50px;
-  padding: 10px;
-}
-
-.subtitle {
-  text-align: center;
-  font-weight: bold;
-  font-size: 14;
-}
-
-.subtitle {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.sender {
-  padding-bottom: 2px;
-  margin-bottom: 0;
-  
-}
-
-.letterhead {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid green;
-  margin-bottom: 10px;
-  padding-bottom: 2px;
-}
-
-.letterhead > p {
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-
-.send-date {
-  justify-self: right;
-}
-
-.footer-break {
-  border-top: 2px solid green;
-  border-bottom: 2px solid green;
-  height: 10px;
-}
-.footer > p {
-  padding: 0;
-  margin: 0;
-}
-.section-header {
-  background: #d2e6c3;
-  border: 1px solid black;
-  padding: 4px;
-}
-
-th {
-  border: 1px solid black;
-  font-weight: normal;
-  text-align: left;
-}
-
-.report-meta > tbody > tr> th {
-  padding-left: 20px;
-  min-width: 220px;
-}
-
-td {
-  padding-left: 20px;
-}
-
-.test-results > tbody > tr > td {
-  
-}
-
-.test-results >tbody > tr > td {
-  min-width: 1.5in
-}
-.units {
-  align-content: left;
-  padding-left: 0;
-}
-
-.result {
-  text-align: center;
-}
-
-.range {
-  text-align: center;
-}
-
-.footer {
-  display: flex;
-  justify-content: space-between;
-}
-</style>
-<div class=report>
-    <h1>theranos</h1>
-    <p class='subtitle'>Theranos Test Report Technology Demonstration</p>
-    <p class='sender'>Theranos, Inc.</p>
-    <div class='letterhead'>
-        <p class='address'>1601 S. California Ave, Palo Alto CA 94304</p>
-        <p class='send-date'>{{ collected_at.date() }}</p>
-    </div>
-    <div class='section-header'>
-        <p>PATIENT INFORMATION</p>
-    </div>
-    <table class='report-meta'>
-        <tr>
-            <th>PATIENT NO.</td>
-            <td>{{ patient_number }}</td>
-        </tr>
-        <tr>
-            <th>D.O.B.</th>
-            <td>Unknown</td>
-        </tr>
-        <tr>
-            <th>AGE/GENDER</th>
-            <td>N/A / M</td>
-        </tr>
-        <tr>
-            <th>PT MEDICATIONS</th>
-            <td>Unknown</td>
-        </tr>
-        <tr>
-            <th>ORDERING M/D</th>
-            <td>Dr. Elizabeth Holmes, Vmp.</td>
-        </tr>
-    </table>
-    <div class='section-header'>
-        <p>TEST DETAIL</p>
-    </div>
-    <table class='report-meta'>
-        <tr>
-            <th>DATE COLLECTED</th>
-            <td>{{ collected_at.date() }}</td>
-        </tr>
-        <tr>
-            <th>SPECIMEN(S) COLLECTED</td>
-            <td>Blood</td>
-        </tr>
-        <tr>
-            <th>DATE REPORTED</th>
-            <td>{{ collected_at.date() }}</td>
-        </tr>
-        <tr>
-            <th>COMMENTS</th>
-            <td>Non-fasting *Organ Transplant Qualification*</td>
-        </tr>
-    </table>
-    <div class='section-header'>
-        <p> COMPREHENSIVE METABOLIC PANEL</p>
-    </div>
-    <table class="test-results">
-        <tr class='test-results-header'>
-            <th>TEST NAME</th>
-            <th>PATIENT's RESULTS</th>
-            <th>REF. RANGE</th>
-            <th>UNITS</th>
-        </tr>
-        {% for r in metabolic_panel %}
-        <tr>
-            <td class='name'>{{ r.test.name }}</td>
-            <td class='result'>{{ r.result }}</td>
-            <td class='range'>{{ r.test.range }}</td>
-            <td class='units'>{{ r.test.units }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <p>Key: L= Below Reference Range, H = Above Reeference Range, WNL = Within Normal Limits, * = Critical Value</p>
-    <p>** Reference range is for fasting; results can fluctuate outside of this range based on fasting state</p>
-    
-    <div class='section-header'>
-        <p>LIPID PANEL</p>
-    </div>
-    
-    <table class="test-results">
-        <tr class='test-results-header'>
-            <th>TEST NAME</th>
-            <th class='result'>PATIENT's RESULTS</th>
-            <th class='range'>REF. RANGE</th>
-            <th>UNITS</th>
-        </tr>
-        {% for r in lipid_panel %}
-        <tr>
-            <td class='name'>{{ r.test.name }}</td>
-            <td class='result'>{{ r.result }}</td>
-            <td class='range'>{{ r.test.range }}</td>
-            <td class='units'>{{ r.test.units }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <p>Key: L= Below Reference Range, H = Above Reeference Range, WNL = Within Normal Limits, * = Critical Value</p>
-    
-    <div class='footer-break'></div>
-    
-    <p style='text-align:center'>End of Report</p>
-    <div class='footer'>
-        <p>Anonymous Guest</p>
-        <p>Patient No. {{ patient_number }}</p>
-        <p>{{ collected_at.date() }}</p>
-    </div>
-</div>
-</html>
-""")
+with open(TEMPLATES / "template.jinja2") as fh:
+    template = Template(source=fh.read())
 
 # The probability any given test will fall within the "normal" range
 P_PASS = 0.8
@@ -286,10 +70,28 @@ class Range:
         allowed_deviation = abs(mean - self.high)
         actual_deviation = z_sample * allowed_deviation / z_top
         val = mean + actual_deviation
+
         return Sample(
             range=self,  # Contains formatting directives, and in/out of bounds info
-            value=val,
+            value=self._fmt(val),
+            ok=self.check_bounds(val)
         )
+
+    def _fmt(self, val: float) -> str:
+        """
+        Format as a string for display
+        """
+        precision = self.fmt_precision.format(val)
+        final = self.fmt_result.format(precision)
+        return final
+
+    def check_bounds(self, val: float) -> str:
+        out_of_range = self.contains(val)
+        if out_of_range == Range.BELOW:
+            return f"L"
+        if out_of_range == Range.ABOVE:
+            return f"H"
+        return ""
 
     def contains(self, value):
         # The value is called out with a prefix if it's too high or too low
@@ -333,19 +135,9 @@ class Sample:
     The result of sampling a range, formatted according to that range's conventions.
     """
     range: Range
-    value: float  # pre-formatted for precision
+    value: str  # pre-formatted for precision
+    ok: str
 
-    def __str__(self):
-        # The range and value have the same decimal precision
-        num = self.range.fmt_precision.format(self.value)
-        # The value might have a standard prefix or postfix
-        val = self.range.fmt_result.format(num)
-        out_of_range = self.range.contains(self.value)
-        if out_of_range == Range.BELOW:
-            return f"L {val}"
-        if out_of_range == Range.ABOVE:
-            return f"H {val}"
-        return val
 
 
 @dataclass
@@ -421,7 +213,7 @@ class LabReport:
         Test("Bun", Range(6, 24), "mg/dL", ),
         Test("Creatine", Range(0.5, 1.2, fmt_precision=ONE_DECIMAL), "mg/dL", ),
         Test("Calcium", Range(8.3, 10.6, fmt_precision=ONE_DECIMAL), "g/dL", ),
-        Test("Protein, Total", Range(6, 8), "g/dL", ),
+        Test("Protein, Total", Range(6, 8, fmt_precision=ONE_DECIMAL), "g/dL", ),
         Test("Albumin", Range(3.5, 5.1, fmt_precision=ONE_DECIMAL), "g/dL", ),
         Test("Bilirubin, Total", Range(0.3, 1.4, fmt_precision=ONE_DECIMAL), "mg/dl", ),
         Test("ALT", Range(44, 135), "U/L", ),
@@ -443,6 +235,11 @@ class LabReport:
         ctx = asdict(self)
         ctx['metabolic_panel'] = self.metabolic_panel
         ctx['lipid_panel'] = self.lipid_panel
+        # PDF requires inline style sheets, which we inject via templating
+        with open(TEMPLATES / "style.css") as fh:
+            ctx['style'] = fh.read()
+        with open(TEMPLATES / "normalize.css") as fh:
+            ctx['normalize'] = fh.read()
         print(ctx)
         return template.render(ctx)
 
@@ -454,11 +251,15 @@ class LabReport:
         """
         Generate psuedorandom results, and render them as a PDF
         """
-        with open(filename, 'wb') as fh:
-            pisa.CreatePDF(
-                src=self.as_html(),
-                dest=fh,
-            )
+        pdfkit.from_string(
+            self.as_html(), filename, configuration=PDF_CONFIG,
+            options={
+                'encoding': "UTF-8",
+                'print-media-type': '',
+                'page-size': 'A4',
+                'zoom': '1.1'
+            }
+                           )
 
 
 if __name__ == "__main__":
