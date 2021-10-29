@@ -263,8 +263,17 @@ class LabReport:
 
 
 if __name__ == "__main__":
-    r = LabReport(patient_number=12345, collected_at=dt.datetime.now())
-    r.save_pdf("test.pdf")
-    r.save_html("test.html")
+    import argparse, sys
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('patient_number', action='store')
+    parser.add_argument('--output_folder', '-o', type=str, default='.')
+
+    args = parser.parse_args(sys.argv[1:])
+
+    r = LabReport(patient_number=args.patient_number, collected_at=dt.datetime.now())
+    out = Path(args.output_folder) / f"{args.patient_number}.pdf"
+    print(out)
+    r.save_pdf(out)
 
 
