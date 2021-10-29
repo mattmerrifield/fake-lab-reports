@@ -227,8 +227,8 @@ class LabReport:
     lipid_panel = GenList(
         Test("Cholesterol, Total", Below(0, 240), "mg/dL"),
         Test("Triglycerides", Below(0, 200), "mg/dL"),
-        Test("HDL Cholesteral", Below(0, 40), "mg/dL"),
-        Test("LDL Cholesterol", Above(130, 260), "mg/dL"),
+        Test("HDL Cholesteral", Below(40, 90), "mg/dL"),
+        Test("LDL Cholesterol", Above(0, 130), "mg/dL"),
     )
 
     def as_html(self) -> str:
@@ -281,6 +281,3 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     generate(args.patient_number, args.output_folder)
-
-
-
