@@ -259,7 +259,13 @@ class LabReport:
                 'page-size': 'A4',
                 'zoom': '1.1'
             }
-                           )
+   )
+
+def generate(patient_number, output_folder):
+    r = LabReport(patient_number=patient_number, collected_at=dt.datetime.now())
+    out = Path(output_folder) / f"{patient_number}.pdf"
+    r.save_pdf(out)
+
 
 
 if __name__ == "__main__":
@@ -271,9 +277,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args(sys.argv[1:])
 
-    r = LabReport(patient_number=args.patient_number, collected_at=dt.datetime.now())
-    out = Path(args.output_folder) / f"{args.patient_number}.pdf"
-    print(out)
-    r.save_pdf(out)
+    generate(args.patient_number, args.output_folder)
+
 
 
