@@ -107,11 +107,11 @@ class Between:
 
 
 @dataclass
-class UnderHigh(Between):
+class LTHigh(Between):
     """
     Expect below. Must provide low anyway, so we can generate a number
     """
-    fmt_range = "<{high}"
+    fmt_range: str = "<{high}"
 
     def contains(self, value):
         if self.high < value:
@@ -120,11 +120,11 @@ class UnderHigh(Between):
 
 
 @dataclass
-class OverLow(Between):
+class GTLow(Between):
     """
     Expect above. Must provide high anyway, so we can generate a number
     """
-    fmt_range = ">{low}"
+    fmt_range: str = ">{low}"
 
     def contains(self, value):
         if value < self.low:
@@ -227,10 +227,10 @@ class LabReport:
     )
 
     lipid_panel = GenList(
-        Test("Cholesterol, Total", UnderHigh(100, 240), "mg/dL"),
-        Test("Triglycerides", UnderHigh(100, 200), "mg/dL"),
-        Test("HDL Cholesteral", OverLow(40, 90), "mg/dL"),
-        Test("LDL Cholesterol", UnderHigh(85, 130), "mg/dL"),
+        Test("Cholesterol, Total", LTHigh(100, 240), "mg/dL"),
+        Test("Triglycerides", LTHigh(100, 200), "mg/dL"),
+        Test("HDL Cholesteral", GTLow(40, 90), "mg/dL"),
+        Test("LDL Cholesterol", LTHigh(85, 130), "mg/dL"),
     )
 
     def as_html(self) -> str:
