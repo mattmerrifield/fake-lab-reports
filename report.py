@@ -31,7 +31,7 @@ P_PASS = 0.8
 ONE_DECIMAL = "{:0.1f}"
 
 @dataclass
-class Range:
+class Between:
     """
     The normal range of a test result.
     """
@@ -90,9 +90,9 @@ class Range:
 
     def check_bounds(self, val: float) -> str:
         out_of_range = self.contains(val)
-        if out_of_range == Range.BELOW:
+        if out_of_range == Between.BELOW:
             return f"L"
-        if out_of_range == Range.ABOVE:
+        if out_of_range == Between.ABOVE:
             return f"H"
         return ""
 
@@ -101,35 +101,35 @@ class Range:
         if self.low < value < self.high:
             return self.OK
         if value < self.low:
-            return Range.BELOW
+            return Between.BELOW
         if self.high < value:
-            return Range.ABOVE
+            return Between.ABOVE
 
 
 @dataclass
-class Below(Range):
+class UnderHigh(Between):
     """
     Expect below. Must provide low anyway, so we can generate a number
     """
-    fmt = "<{high}"
+    fmt_range = "<{high}"
 
     def contains(self, value):
         if self.high < value:
-            return Range.ABOVE
-        return Range.OK
+            return Between.ABOVE
+        return Between.OK
 
 
 @dataclass
-class Above(Range):
+class OverLow(Between):
     """
     Expect above. Must provide high anyway, so we can generate a number
     """
-    fmt = ">{low}"
+    fmt_range = ">{low}"
 
     def contains(self, value):
         if value < self.low:
-            return Range.BELOW
-        return Range.OK
+            return Between.BELOW
+        return Between.OK
 
 
 @dataclass
@@ -137,7 +137,7 @@ class Sample:
     """
     The result of sampling a range, formatted according to that range's conventions.
     """
-    range: Range
+    range: Between
     value: str  # pre-formatted for precision
     ok: str
 
@@ -150,7 +150,7 @@ class Test:
     """
     # Parameters to generate a test result.
     name: str
-    range: Range
+    range: Between
     units: str
 
     def sample(self, rand_seed, p_pass) -> 'Result':
@@ -210,27 +210,27 @@ class LabReport:
     # Data descriptor for making a list of fake test results.
     # Use it like a property, e.g. `results = self.metabolic_panel`
     metabolic_panel = GenList(
-        Test("Sodium", Range(132, 146), "mM"),
-        Test("Potassium", Range(3.4, 5.4, fmt_precision=ONE_DECIMAL), "mM", ),
-        Test("Chloride", Range(99, 109), "mM"),
-        Test("Bicarbonate", Range(19, 33), "mM"),
-        Test("Glucose", Range(73, 105, fmt_result="{}**"), "mg/dL"),
-        Test("Bun", Range(6, 24), "mg/dL", ),
-        Test("Creatine", Range(0.5, 1.2, fmt_precision=ONE_DECIMAL), "mg/dL", ),
-        Test("Calcium", Range(8.3, 10.6, fmt_precision=ONE_DECIMAL), "g/dL", ),
-        Test("Protein, Total", Range(6, 8, fmt_precision=ONE_DECIMAL), "g/dL", ),
-        Test("Albumin", Range(3.5, 5.1, fmt_precision=ONE_DECIMAL), "g/dL", ),
-        Test("Bilirubin, Total", Range(0.3, 1.4, fmt_precision=ONE_DECIMAL), "mg/dl", ),
-        Test("ALP", Range(44, 135), "U/L", ),
-        Test("ALT", Range(7.9, 40.9, fmt_precision=ONE_DECIMAL), "U/L"),
-        Test("AST", Range(0, 35), "U/L"),
+        Test("Sodium", Between(132, 146), "mM"),
+        Test("Potassium", Between(3.4, 5.4, fmt_precision=ONE_DECIMAL), "mM", ),
+        Test("Chloride", Between(99, 109), "mM"),
+        Test("Bicarbonate", Between(19, 33), "mM"),
+        Test("Glucose", Between(73, 105, fmt_result="{}**"), "mg/dL"),
+        Test("Bun", Between(6, 24), "mg/dL", ),
+        Test("Creatine", Between(0.5, 1.2, fmt_precision=ONE_DECIMAL), "mg/dL", ),
+        Test("Calcium", Between(8.3, 10.6, fmt_precision=ONE_DECIMAL), "g/dL", ),
+        Test("Protein, Total", Between(6, 8, fmt_precision=ONE_DECIMAL), "g/dL", ),
+        Test("Albumin", Between(3.5, 5.1, fmt_precision=ONE_DECIMAL), "g/dL", ),
+        Test("Bilirubin, Total", Between(0.3, 1.4, fmt_precision=ONE_DECIMAL), "mg/dl", ),
+        Test("ALP", Between(44, 135), "U/L", ),
+        Test("ALT", Between(7.9, 40.9, fmt_precision=ONE_DECIMAL), "U/L"),
+        Test("AST", Between(0, 35), "U/L"),
     )
 
     lipid_panel = GenList(
-        Test("Cholesterol, Total", Below(0, 240), "mg/dL"),
-        Test("Triglycerides", Below(0, 200), "mg/dL"),
-        Test("HDL Cholesteral", Above(40, 90), "mg/dL"),
-        Test("LDL Cholesterol", Below(0, 130), "mg/dL"),
+        Test("Cholesterol, Total", UnderHigh(100, 240), "mg/dL"),
+        Test("Triglycerides", UnderHigh(100, 200), "mg/dL"),
+        Test("HDL Cholesteral", OverLow(40, 90), "mg/dL"),
+        Test("LDL Cholesterol", UnderHigh(85, 130), "mg/dL"),
     )
 
     def as_html(self) -> str:
