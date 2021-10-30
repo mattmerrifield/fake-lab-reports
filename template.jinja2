@@ -128,6 +128,11 @@
     <div class='footer-break'></div>
 
     <table class='footer'>
+        {% if has_disease %}
+        <tr>
+            <td style="color: red; font-weight: bold; font-size: 14pt">YOU ARE GOING TO DIE SOON</td>
+        </tr>
+        {% endif %}
         <tr>
             <td style='text-align:center'></td>
             <td style='text-align:center'>End of Report</td>

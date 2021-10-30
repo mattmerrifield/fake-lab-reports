@@ -52,7 +52,7 @@ class Range:
         high, low = self.fmt_precision.format(self.high), self.fmt_precision.format(self.low)
         return self.fmt_range.format(high=high, low=low)
 
-    def sample(self, rand_seed) -> 'Sample':
+    def sample(self, rand_seed, p_pass) -> 'Sample':
         """
         Use a specific seed to deterministically generate a random-looking result within (or slightly out of) the
         expected high/low range
@@ -64,7 +64,7 @@ class Range:
         # Work backwards from z-score P values, and the fact that 1-sigma is 68%.
         # TODO: implement bias by messing with this distribution function.
         dist = statistics.NormalDist(0, 1)
-        z_top = dist.inv_cdf((1 + P_PASS)/2)
+        z_top = dist.inv_cdf((1 + p_pass)/2)
 
         # He who controls the spice controls the universe.
         # By spice I mean psuedo-random number generator seed.
@@ -153,13 +153,13 @@ class Test:
     range: Range
     units: str
 
-    def sample(self, rand_seed) -> 'Result':
+    def sample(self, rand_seed, p_pass) -> 'Result':
         """
         Psuedo-random result generator
         """
         return Result(
             test=self,
-            result=self.range.sample(rand_seed)
+            result=self.range.sample(rand_seed, p_pass)
         )
 
 
@@ -193,7 +193,7 @@ class GenList:
         # But don't use the literal same seed value for every sample -- use a deterministic array of them, so
         # they're each in or out of range independently of one another
         not_rand = random.Random(instance.patient_number)
-        return [t.sample(not_rand.randint(0, sys.maxsize)) for t in self.tests]
+        return [t.sample(not_rand.randint(0, sys.maxsize), instance.p_pass) for t in self.tests]
 
 
 @dataclass
@@ -204,6 +204,8 @@ class LabReport:
     # Configurable report parameters
     patient_number: int
     collected_at: dt.datetime
+    has_disease: bool
+    p_pass: float = P_PASS
 
     # Data descriptor for making a list of fake test results.
     # Use it like a property, e.g. `results = self.metabolic_panel`
@@ -238,6 +240,7 @@ class LabReport:
         ctx = asdict(self)
         ctx['metabolic_panel'] = self.metabolic_panel
         ctx['lipid_panel'] = self.lipid_panel
+        ctx['has_disease'] = self.has_disease
         # PDF requires inline style sheets, which we inject via templating
         with open(TEMPLATES / "style.css") as fh:
             ctx['style'] = fh.read()
@@ -264,8 +267,9 @@ class LabReport:
             }
    )
 
-def generate(patient_number, output_folder):
-    r = LabReport(patient_number=patient_number, collected_at=dt.datetime.now())
+
+def generate(patient_number, output_folder, has_disease, p_pass):
+    r = LabReport(patient_number=patient_number, collected_at=dt.datetime.now(), has_disease=has_disease, p_pass=p_pass)
     out = Path(output_folder) / f"{patient_number}.pdf"
     r.save_pdf(out)
 
@@ -277,7 +281,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('patient_number', action='store')
     parser.add_argument('--output_folder', '-o', type=str, default='.')
+    parser.add_argument('--has_disease', '-d', action='store_true')
 
     args = parser.parse_args(sys.argv[1:])
 
-    generate(args.patient_number, args.output_folder)
+    generate(args.patient_number, args.output_folder, args.has_disease, P_PASS/2 if args.has_disease else P_PASS)
