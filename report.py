@@ -235,7 +235,7 @@ class LabReport:
     lipid_panel = GenList(
         Test("Cholesterol, Total", LTHigh(100, 240), "mg/dL"),
         Test("Triglycerides", LTHigh(100, 200), "mg/dL"),
-        Test("HDL Cholesteral", GTLow(40, 90), "mg/dL"),
+        Test("HDL Cholesterol", GTLow(40, 90), "mg/dL"),
         Test("LDL Cholesterol", LTHigh(85, 130), "mg/dL"),
     )
 
@@ -303,7 +303,7 @@ def gen_samples():
     for i, patient_number in enumerate(range(START_AT, START_AT + NUM_REPORTS)):
         r = LabReport(patient_number=patient_number, collected_at=dt.datetime.now(), has_disease=False, p_pass=P_PASS)
         out = Path(output_folder) / f"report-{i}.pdf"
-        r.save_pdf(out)
+        # r.save_pdf(out)
 
     # One bad patient, with ID 10
     BAD_ID = 10
@@ -318,7 +318,7 @@ def gen_samples():
         "Bicarbonate": 40,
         "Chloride": 118,
         'Glucose': 152,
-        'BUN': 41,
+        'Bun': 41,
         'Creatine': 1.44,
         'Calcium': 15,
         'Protein, Total': 6.6,
@@ -328,7 +328,7 @@ def gen_samples():
         'ALT': 31,
         'AST': 93,
         "Cholesterol, Total": 259,
-        "Triglicerides": 213,
+        "Triglycerides": 213,
         "HDL Cholesterol": 22,
         "LDL Cholesterol": 158,
     }
