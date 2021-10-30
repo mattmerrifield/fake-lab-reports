@@ -115,9 +115,14 @@
             {% for r in lipid_panel %}
                 <tr>
                     <td class='name'>{{ r.test.name }}</td>
-                    <td class='pull-right'>{{ r.result.ok }}</td>
-                    <td class='pull-left'>{{ r.result.value }}</td>
-                    <td class='range'>{{ r.test.range }}</td>
+                    <td class='result {{ r.result.ok }}'>
+                        <span style='width: 1in'>{{ r.result.ok }}</span>
+                        <span>{{ r.result.value }}</span>
+                        <span></span>
+                    </td>
+                    <td class='range'>
+                        {{ r.test.range }}
+                    </td>
                     <td class='units'>{{ r.test.units }}</td>
                 </tr>
             {% endfor %}
@@ -132,7 +137,8 @@
         <tr>
             <td></td>
             <td style="color: red; font-weight: bold; font-size: 14pt; text-align:center">
-                DISCUSS TRANSPLANT OPTIONS WITH YOUR DOCTOR
+                BAD BLOOD DETECTED<br>
+                DISCUSS CARDIAC TRANSPLANT OPTIONS WITH YOUR DOCTOR
             </td>
             <td></td>
         </tr>
@@ -140,6 +146,7 @@
         <tr>
             <td></td>
             <td style="color: blue; font-weight: bold; font-size: 14pt; text-align:center">
+                GOOD BLOOD DETECTED<br>
                 DISCUSS BLOOD DONATION OPTIONS WITH YOUR DOCTOR
             </td>
             <td></td>
