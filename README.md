@@ -5,6 +5,6 @@ Inspired by [this infamous Theranos tweet](https://twitter.com/EricTopol/status/
 
 The PDFs look like this:
 
-![report](./example.jpg)
+![report](./example.JPG)
 
 You need to install https://wkhtmltopdf.org/ for the PDF rendering to work. HTML works out of the box.
