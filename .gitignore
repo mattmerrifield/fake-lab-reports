@@ -7,8 +7,8 @@ __pycache__/
 # Editor files
 .idea/
 
-# Generated report files
-*.pdf
+# test report files
+12345.pdf
 *.html
 
 # C extensions

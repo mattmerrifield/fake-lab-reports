@@ -1,10 +1,11 @@
 import enum
+import itertools
 import platform
 import random
 import datetime as dt
 import statistics
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import List, Optional
 
@@ -76,17 +77,8 @@ class Between:
 
         return Sample(
             range=self,  # Contains formatting directives, and in/out of bounds info
-            value=self._fmt(val),
-            ok=self.check_bounds(val)
+            val=val,
         )
-
-    def _fmt(self, val: float) -> str:
-        """
-        Format as a string for display
-        """
-        precision = self.fmt_precision.format(val)
-        final = self.fmt_result.format(precision)
-        return final
 
     def check_bounds(self, val: float) -> str:
         out_of_range = self.contains(val)
@@ -138,8 +130,17 @@ class Sample:
     The result of sampling a range, formatted according to that range's conventions.
     """
     range: Between
-    value: str  # pre-formatted for precision
-    ok: str
+    val: float  # pre-formatted for precision
+
+    @property
+    def value(self):
+        precision = self.range.fmt_precision.format(self.val)
+        final = self.range.fmt_result.format(precision)
+        return final
+
+    @property
+    def ok(self):
+        return self.range.check_bounds(self.val)
 
 
 
@@ -193,7 +194,11 @@ class GenList:
         # But don't use the literal same seed value for every sample -- use a deterministic array of them, so
         # they're each in or out of range independently of one another
         not_rand = random.Random(instance.patient_number)
-        return [t.sample(not_rand.randint(0, sys.maxsize), instance.p_pass) for t in self.tests]
+        results: List[Result] = [t.sample(not_rand.randint(0, sys.maxsize), instance.p_pass) for t in self.tests]
+        for r in results:
+            if val := instance.override_samples.get(r.test.name, None):
+                r.result.val = val
+        return results
 
 
 @dataclass
@@ -206,6 +211,7 @@ class LabReport:
     collected_at: dt.datetime
     has_disease: bool
     p_pass: float = P_PASS
+    override_samples: dict = field(default_factory=dict)
 
     # Data descriptor for making a list of fake test results.
     # Use it like a property, e.g. `results = self.metabolic_panel`
@@ -232,6 +238,18 @@ class LabReport:
         Test("HDL Cholesteral", GTLow(40, 90), "mg/dL"),
         Test("LDL Cholesterol", LTHigh(85, 130), "mg/dL"),
     )
+
+    def force_result(self, name, value):
+        """
+        Force a specific test, by name, to have a specific value
+        """
+        # Ew, gross, just us a hash map why don't you (because this is a hack job)
+        for t in itertools.chain(self.metabolic_panel, self.lipid_panel):
+            if t.test.name == name:
+                t.result.value = value
+                return
+        raise KeyError(f"Test {name} not found")
+
 
     def as_html(self) -> str:
         """
@@ -274,8 +292,54 @@ def generate(patient_number, output_folder, has_disease, p_pass):
     r.save_pdf(out)
 
 
+def gen_samples():
+    output_folder = Path(__file__).parent / "okay"
+    output_folder.mkdir(exist_ok=True)
+
+    START_AT = 15900
+    NUM_REPORTS = 60
+
+    # Arbitrary range of patient numbers; all healthy
+    for i, patient_number in enumerate(range(START_AT, START_AT + NUM_REPORTS)):
+        r = LabReport(patient_number=patient_number, collected_at=dt.datetime.now(), has_disease=False, p_pass=P_PASS)
+        out = Path(output_folder) / f"report-{i}.pdf"
+        r.save_pdf(out)
+
+    # One bad patient, with ID 10
+    BAD_ID = 10
+    output_folder = Path(__file__).parent / "bad"
+    output_folder.mkdir(exist_ok=True)
+    r = LabReport(patient_number=START_AT + BAD_ID, collected_at=dt.datetime.now(), has_disease=True, p_pass=P_PASS/2)
+
+    # Some specific hard-coded changes for this one
+    r.override_samples = {
+        'Sodium': 162,
+        'Potassium': 6.8,
+        "Bicarbonate": 40,
+        'Glucose': 52,
+        'BUN': 41,
+        'Creatine': 1.44,
+        'Calcium': 15,
+        'Protein, Total': 6.6,
+        'Albumin': 33,
+        'Bilirubin, Total': 2.4,
+        "ALP": 118.8,
+        'ALT': 31,
+        'AST': 93,
+        "Cholesterol, Total": 259,
+        "Triglicerides": 213,
+        "HDL Cholesterol": 22,
+        "LDL Cholesterol": 158,
+    }
+
+    out = Path(output_folder) / f"report-{BAD_ID}.pdf"
+    r.save_pdf(out)
+
+
 
 if __name__ == "__main__":
+    gen_samples()
+
     import argparse, sys
 
     parser = argparse.ArgumentParser()
