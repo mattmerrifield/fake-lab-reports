@@ -221,7 +221,7 @@ class LabReport:
         Test("Protein, Total", Range(6, 8, fmt_precision=ONE_DECIMAL), "g/dL", ),
         Test("Albumin", Range(3.5, 5.1, fmt_precision=ONE_DECIMAL), "g/dL", ),
         Test("Bilirubin, Total", Range(0.3, 1.4, fmt_precision=ONE_DECIMAL), "mg/dl", ),
-        Test("ALT", Range(44, 135), "U/L", ),
+        Test("ALP", Range(44, 135), "U/L", ),
         Test("ALT", Range(7.9, 40.9, fmt_precision=ONE_DECIMAL), "U/L"),
         Test("AST", Range(0, 35), "U/L"),
     )
@@ -229,8 +229,8 @@ class LabReport:
     lipid_panel = GenList(
         Test("Cholesterol, Total", Below(0, 240), "mg/dL"),
         Test("Triglycerides", Below(0, 200), "mg/dL"),
-        Test("HDL Cholesteral", Below(40, 90), "mg/dL"),
-        Test("LDL Cholesterol", Above(0, 130), "mg/dL"),
+        Test("HDL Cholesteral", Above(40, 90), "mg/dL"),
+        Test("LDL Cholesterol", Below(0, 130), "mg/dL"),
     )
 
     def as_html(self) -> str:
